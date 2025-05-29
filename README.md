@@ -94,3 +94,49 @@ This approach is powerful when debugging **large functions**, as it lets you jum
 - Use `debug()`/`undebug()` when you're unsure **where** the problem is.
 - Use `browser()` when you **know where** the issue might be.
 - Avoid using `Rscript` when you need interactive debugging — use `source()` instead.
+
+## Advanced Debugging
+
+When debugging more complex functions—especially those from installed packages—you might want to inspect or modify the function behavior at a specific location.
+Here are some powerful techniques:
+
+### `as.list(body(...))`: Inspect Function Expressions
+
+In R, the body of a function is a sequence of expressions, not just plain lines of code.
+You can inspect each expression using:
+
+```r
+as.list(body(<function_name>))
+```
+
+This returns a list of expressions, allowing you to identify the exact position (e.g., 1st, 2nd, 12th…) for inserting debug logic.
+
+### `trace()`: Insert Debug Code at Specific Locations
+
+You can insert debugging expressions such as browser() (or even print(), etc...) at any expression index using trace().
+
+```r
+trace("<function_name>", tracer = quote(browser()), at = <expression_number>, where = asNamespace("<package_name>"))
+```
+
+- `tracer = quote(browser())`: inserts a pause for interactive inspection
+- `at = <expression_number>`: expression index inside the function body (as identified from `as.list(body(...))`)
+- `where = asNamespace(...)`: ensures access to non-exported functions in a package
+
+### `untrace()`: Remove Trace Insertion
+
+After you’re done debugging, remove the trace:
+
+```r
+untrace("<function_name>", where = asNamespace("<package_name>"))
+```
+
+### Examples
+
+```r
+as.list(body(MultiwayRegression:::rrr))
+
+trace("rrr", tracer = quote(browser()), at = 12, where = asNamespace("MultiwayRegression"))
+
+untrace("rrr", where = asNamespace("MultiwayRegression"))
+```
